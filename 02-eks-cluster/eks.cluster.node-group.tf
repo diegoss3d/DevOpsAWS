@@ -3,7 +3,7 @@ resource "aws_eks_node_group" "this" {
   node_group_name = "workshop-march-eks-cluster-ng"
   node_role_arn   = aws_iam_role.eks_cluster_ng.arn
   subnet_ids      = data.aws_subnets.private.ids
-  instance_types  = ["t3.micro"]
+  instance_types  = ["t3.small"]
   capacity_type   = "ON_DEMAND"
 
   scaling_config {
