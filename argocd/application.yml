@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/diegoss3d/DevOpsAWS
     targetRevision: HEAD
-    path: .
+    path: gitops
   destination:
     server: https://kubernetes.default.svc
     namespace: guestbook
