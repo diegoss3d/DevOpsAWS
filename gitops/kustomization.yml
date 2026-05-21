@@ -1,0 +1,17 @@
+namePrefix: dnv-
+nameSuffix: -prod
+
+resources:
+  - backend/deploy.yml
+  - backend/service.yml
+  - frontend/deploy.yml
+  - frontend/service.yml
+
+images:
+  - name: 917714909985.dkr.ecr.us-east-1.amazonaws.com/workshop/production/backend:latest
+    newName: 917714909985.dkr.ecr.us-east-1.amazonaws.com/workshop/production/backend:latest
+    newTag: v1.0
+
+  - name: 917714909985.dkr.ecr.us-east-1.amazonaws.com/workshop/production/frontend:latest
+    newName: 917714909985.dkr.ecr.us-east-1.amazonaws.com/workshop/production/frontend:latest
+    newTag: v1.0
