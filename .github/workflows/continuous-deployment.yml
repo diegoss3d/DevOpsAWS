@@ -39,8 +39,8 @@ jobs:
         REPOSITORY: ${{ env.BACKEND_REPOSITORY }} 
       run: |
         docker build -f backend/YoutubeLiveApp/Dockerfile \
-          -t $REGISTRY/$REPOSITORY:$IMAGE_TAG ./backend/YoutubeLiveApp
-        docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          -t $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG ./backend/YoutubeLiveApp
+        docker push $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
 
     - name: Checkout GitOps Repository
       uses: actions/checkout@v4
@@ -58,10 +58,10 @@ jobs:
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
         
         # Altera o manifesto usando o Kustomize
-        kustomize edit set image $REGISTRY/$REPOSITORY=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+        kustomize edit set image $REGISTRY/$BACKEND_REPOSITORY=$REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
         date > generated.txt
         
         # Adiciona, commita e envia as alterações
         git add .
-        git commit -m "[BOT] Changing image to $REGISTRY/$REPOSITORY:$IMAGE_TAG [skip ci]"
+        git commit -m "[BOT] Changing image to $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG [skip ci]"
         git push origin main
