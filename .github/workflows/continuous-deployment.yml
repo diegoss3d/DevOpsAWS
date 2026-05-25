@@ -62,6 +62,9 @@ jobs:
         # Adiciona as alterações da pasta gitops e faz o commit
         git add .
         git commit -m "[BOT] Changing image to $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG [skip ci]"
+
+        # Puxa atualizações do remoto para evitar conflitos de concorrência (O PULO DO GATO)
+        git pull origin main --rebase
         
         # Faz o push para o seu repositório principal injetando o PAT diretamente na URL
         git push https://${{ secrets.PAT }}@github.com/diegoss3d/DevOpsAWS.git main
