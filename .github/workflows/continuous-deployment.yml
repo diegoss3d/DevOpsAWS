@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Faz o checkout do código completo do projeto (incluindo a pasta gitops/)
     - name: Checkout Source Code
       uses: actions/checkout@v4
     
@@ -42,26 +43,25 @@ jobs:
           -t $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG ./backend/YoutubeLiveApp
         docker push $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
 
-    - name: Checkout GitOps Repository
-      uses: actions/checkout@v4
-      with:
-        repository: 'https://github.com/diegoss3d/DevOpsAWS-gitops'
-        token: ${{ secrets.PAT }}
-
+    # 2. Atualiza os manifestos do Kustomize e faz o push direto usando o PAT
     - name: Update Kustomize and Push
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         REPOSITORY: ${{ env.BACKEND_REPOSITORY }}
       run: |
-        # Configura as credenciais para o push usar o PAT injetado no checkout
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        
+        # Navega para dentro da pasta gitops que já está disponível no repositório
+        cd gitops
         
         # Altera o manifesto usando o Kustomize
         kustomize edit set image $REGISTRY/$BACKEND_REPOSITORY=$REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG
         date > generated.txt
         
-        # Adiciona, commita e envia as alterações
+        # Adiciona as alterações da pasta gitops e faz o commit
         git add .
         git commit -m "[BOT] Changing image to $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG [skip ci]"
-        git push origin main
+        
+        # Faz o push para o seu repositório principal injetando o PAT diretamente na URL
+        git push https://${{ secrets.PAT }}@github.com/diegoss3d/DevOpsAWS.git main
