@@ -72,3 +72,63 @@ jobs:
         
         # Faz o push para o seu repositório principal injetando o PAT diretamente na URL
         git push https://${{ secrets.PAT }}@github.com/diegoss3d/DevOpsAWS.git main
+
+
+
+
+  frontend:
+    name: Deploy frontend
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Faz o checkout do código completo do projeto (incluindo a pasta gitops/)
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-region: us-east-1
+        role-to-assume: arn:aws:iam::917714909985:role/workshop-march-github-role
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push docker image to Amazon ECR
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: ${{ env.FRONTEND_REPOSITORY }} 
+      run: |
+        docker build -f frontend/YoutubeLiveApp/Dockerfile \
+          -t $REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG ./frontend/YoutubeLiveApp
+        docker push $REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG
+
+    # 2. Atualiza os manifestos do Kustomize e faz o push direto usando o PAT
+    - name: Update Kustomize and Push
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        REPOSITORY: ${{ env.FRONTEND_REPOSITORY }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        # Captura a tag curta atual do frontend (ex: v2.0) direto do arquivo kustomization.yml
+        FRONTEND_VERSION=$(yq '.images[] | select(.name == "*frontend").newTag' gitops/kustomization.yml)
+        
+        # Navega para dentro da pasta gitops que já está disponível no repositório
+        cd gitops
+        
+        # Altera o manifesto usando o Kustomize
+        kustomize edit set image $REGISTRY/$FRONTEND_REPOSITORY=$REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG
+        date > generated.txt
+        
+        # Adiciona as alterações da pasta gitops e faz o commit
+        git add .
+        git commit -m "[BOT] Changing image to $REGISTRY/$FRONTEND_REPOSITORY:$IMAGE_TAG [skip ci] - version: $FRONTEND_VERSION"
+
+        # Puxa atualizações do remoto para evitar conflitos de concorrência (O PULO DO GATO)
+        git pull origin main --rebase || true
+        
+        # Faz o push para o seu repositório principal injetando o PAT diretamente na URL
+        git push https://${{ secrets.PAT }}@github.com/diegoss3d/DevOpsAWS.git main
