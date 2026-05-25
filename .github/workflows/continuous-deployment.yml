@@ -9,6 +9,7 @@ env:
   BACKEND_REPOSITORY: workshop/production/backend
   FRONTEND_REPOSITORY: workshop/production/frontend
   IMAGE_TAG: ${{ github.sha }}
+  
 
 permissions:
   id-token: write
@@ -51,6 +52,9 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+        # Captura a tag curta atual do backend (ex: v2.0) direto do arquivo kustomization.yml
+        BACKEND_VERSION=$(yq '.images[] | select(.name == "*backend").newTag' gitops/kustomization.yml)
         
         # Navega para dentro da pasta gitops que já está disponível no repositório
         cd gitops
@@ -61,7 +65,7 @@ jobs:
         
         # Adiciona as alterações da pasta gitops e faz o commit
         git add .
-        git commit -m "[BOT] Changing image to $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG [skip ci]"
+        git commit -m "[BOT] Changing image to $REGISTRY/$BACKEND_REPOSITORY:$IMAGE_TAG [skip ci] - version: $BACKEND_VERSION"
 
         # Puxa atualizações do remoto para evitar conflitos de concorrência (O PULO DO GATO)
         git pull origin main --rebase || true
